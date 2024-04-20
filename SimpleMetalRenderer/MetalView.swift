@@ -17,18 +17,33 @@ struct MetalViewRepresentable: NSViewRepresentable {
         metalView
     }
     
-    func updateNSView(_ nsView: NSViewType, context: Context) { }
+    func updateNSView(_ nsView: NSViewType, context: Context) { 
+        print("update nsview")
+    }
 }
 
 struct MetalView: View {
     @State private var renderer: Renderer?
     @State private var metalView = MTKView()
+    @Binding var shape: String
     
     var body: some View {
-        MetalViewRepresentable(metalView: $metalView)
-            .onAppear {
-                renderer = Renderer(metalView: metalView)
+        VStack {
+            MetalViewRepresentable(metalView: $metalView)
+            Text(shape)
+        }
+        .onAppear {
+            print("shape is \(shape)")
+            renderer = Renderer(metalView: metalView, shape: shape)
+        }
+        .onChange(of: shape) { _, _ in
+            if shape == "box" {
+                renderer?.showBox()
+            } else {
+                renderer?.showSphere()
             }
+            print("shape changed")
+        }
     }
 }
 

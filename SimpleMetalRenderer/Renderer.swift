@@ -12,11 +12,25 @@ class Renderer: NSObject {
     static var commandQueue: MTLCommandQueue!
     static var library: MTLLibrary!
     
+    var squareMesh: MTKMesh!
+    var sphereMesh: MTKMesh!
     var mesh: MTKMesh!
+    
     var vertexBuffer: MTLBuffer!
     var pipelineState: MTLRenderPipelineState!
     
-    init(metalView: MTKView) {
+    func showBox() {
+        mesh = squareMesh
+        vertexBuffer = mesh.vertexBuffers[0].buffer
+    }
+    
+    func showSphere() {
+        mesh = sphereMesh
+        vertexBuffer = mesh.vertexBuffers[0].buffer
+    }
+    
+    init(metalView: MTKView, shape: String) {
+        print("shape is \(shape)")
         guard let device = MTLCreateSystemDefaultDevice(),
               let commandQueue = device.makeCommandQueue()
         else {
@@ -38,12 +52,22 @@ class Renderer: NSObject {
             allocator: allocator
         )
         
+        let mdlMesh2 = MDLMesh(
+            sphereWithExtent: [size, size, size],
+            segments: [10, 10],
+            inwardNormals: false,
+            geometryType: .triangles,
+            allocator: allocator
+        )
+
         do {
-            mesh = try MTKMesh(mesh: mdlMesh, device: device)
+            squareMesh = try MTKMesh(mesh: mdlMesh, device: device)
+            sphereMesh = try MTKMesh(mesh: mdlMesh2, device: device)
         } catch {
             print(error.localizedDescription)
         }
         
+        mesh = squareMesh
         vertexBuffer = mesh.vertexBuffers[0].buffer
         
         // create the shader function lib
@@ -83,7 +107,6 @@ extension Renderer: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
-        print("draw")
         guard let commandBuffer = Self.commandQueue.makeCommandBuffer(),
               let descriptor = view.currentRenderPassDescriptor,
               let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
